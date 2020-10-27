@@ -1,3 +1,5 @@
+from Compress import compress
+
 class Output:
     def __init__(self):
         self.OUTPUT_LENGTH = 32
@@ -9,15 +11,14 @@ class Output:
         self.flags = None
     
     def chaining_value(self):
-        #first_8_words(compress(self.input_chaining_value, block_words, self.counter, self.blocK_length, self.flags)))
-        return None
+        return compress(self.input_chaining_value, self.block_words, self.counter, self.block_length, self.flags)[0:8]
     
     def root_output_bytes(self, output):
         output_block_counter = 0
         for out_block_ind in range(0, len(output), 2*self.OUTPUT_LENGTH):
             remaining_block_bytes = min(2*self.OUTPUT_LENGTH, len(output)- out_block_ind)
             words = ""
-            #words = compress(self.input_chaining_value, self.block_words, output_block_counter, self.block_length, self.flags | self.ROOT)
+            words = compress(self.input_chaining_value, self.block_words, output_block_counter, self.block_length, self.flags | self.ROOT)
 
             for (word, out_word_ind) in zip(words, range(0, remaining_block_bytes, 4)):
                 remaining_word_bytes = min(remaining_block_bytes - out_word_ind, 4)
@@ -26,7 +27,7 @@ class Output:
 
 
 class ChunkState:
-    def __init__(self):
+    def __init__(self, key, chunk_counter, flags):
         self.BLOCK_SIZE = 64
         self.CHUNK_START = 1
         self.CHUNK_END = 2
@@ -35,12 +36,12 @@ class ChunkState:
         self.KEYED_HASH = 16
         self.DERIVE_KEY_CONTEXT = 32
         self.DERIVE_KEY_MATERIAL = 64
-        self.chaining_value = [0] * 8
-        self.chunk_counter = 0
+        self.chaining_value = key
+        self.chunk_counter = chunk_counter
         self.block = [0] * self.BLOCK_SIZE
         self.block_length = 0
         self.blocks_compressed = 0
-        self.flags = 0
+        self.flags = flags
         
 
     def len(self):
@@ -59,15 +60,17 @@ class ChunkState:
                 #We need to pack the little-endian bytes into 32-bit words
                 block_words = self.convert_block_to_words()
                 #Get the chaining_value
-                #TODO::Use the compress function for this
-                #self.chaining_value = first_8_words(compress(self.chaining_value, block_words, self.chunk_counter, self.BLOCK_SIZE, self.flags | self.start_flag()))
+                self.chaining_value = compress(self.chaining_value, block_words, self.chunk_counter, self.BLOCK_SIZE, self.flags | self.start_flag())[0:8]
+                print(self.chaining_value)
+                print(block_words)
+                print(input)
                 self.blocks_compressed += 1
                 self.block = [0] * self.BLOCK_SIZE
                 self.block_length = 0
 
             missing_bytes = self.BLOCK_SIZE - self.block_length
             taken_bytes = min(len(input), missing_bytes)
-            self.block[self.block_length:][:taken_bytes] = input[:taken_bytes]
+            self.block[self.block_length:self.block_length+taken_bytes] = input[:taken_bytes]
             self.block_length += taken_bytes
             input = input[taken_bytes:]
 

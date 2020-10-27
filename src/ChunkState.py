@@ -1,14 +1,14 @@
 from Compress import compress
 
 class Output:
-    def __init__(self):
+    def __init__(self, chaining_value, block_words, block_len, counter, flags):
         self.OUTPUT_LENGTH = 32
         self.ROOT = 8
-        self.input_chaining_value = [0] * 8
-        self.block_words = [0] * 16
-        self.counter = 0
-        self.block_length = 0
-        self.flags = None
+        self.input_chaining_value = chaining_value
+        self.block_words = block_words
+        self.counter = counter
+        self.block_length = block_len
+        self.flags = flags
     
     def chaining_value(self):
         return compress(self.input_chaining_value, self.block_words, self.counter, self.block_length, self.flags)[0:8]
@@ -83,4 +83,4 @@ class ChunkState:
 
     def output(self):
         block_words = self.convert_block_to_words()
-        return (self.chaining_value, block_words, self.block_length, self.chunk_counter, self.flags | self.start_flag() | self.CHUNK_END)
+        return Output(self.chaining_value, block_words, self.block_length, self.chunk_counter, self.flags | self.start_flag() | self.CHUNK_END)

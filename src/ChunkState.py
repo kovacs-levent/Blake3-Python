@@ -15,15 +15,20 @@ class Output:
     
     def root_output_bytes(self, output):
         output_block_counter = 0
+        print(len(output))
         for out_block_ind in range(0, len(output), 2*self.OUTPUT_LENGTH):
             remaining_block_bytes = min(2*self.OUTPUT_LENGTH, len(output)- out_block_ind)
+            print(remaining_block_bytes)
+            print(len(self.block_words))
             words = ""
             words = compress(self.input_chaining_value, self.block_words, output_block_counter, self.block_length, self.flags | self.ROOT)
 
             for (word, out_word_ind) in zip(words, range(0, remaining_block_bytes, 4)):
+                print(word)
                 remaining_word_bytes = min(remaining_block_bytes - out_word_ind, 4)
-                output[out_block_ind + out_word_ind : out_block_ind + out_word_ind + remaining_word_bytes] = word.to_bytes(remaining_word_bytes, byteorder="little")
-        output_block_counter += 1
+                print(remaining_word_bytes)
+                output[out_block_ind + out_word_ind : out_block_ind + out_word_ind + remaining_word_bytes] = word.to_bytes(4, byteorder="little")[:remaining_word_bytes]
+            output_block_counter += 1
 
 
 class ChunkState:
@@ -76,7 +81,7 @@ class ChunkState:
 
     def convert_block_to_words(self):
         block_words = []
-        for i in range(0, self.block_length, 4):
+        for i in range(0, len(self.block), 4):
             word = int.from_bytes(self.block[i:i+4], "little")
             block_words.append(word)
         return block_words

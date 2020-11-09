@@ -9,24 +9,18 @@ class Output:
         self.counter = counter
         self.block_length = block_len
         self.flags = flags
-    
+
     def chaining_value(self):
-        return compress(self.input_chaining_value, self.block_words, self.counter, self.block_length, self.flags)[0:8]
-    
+        return compress(self.input_chaining_value, self.block_words, self.counter, self.block_length, self.flags)[:8]
+
     def root_output_bytes(self, output):
         output_block_counter = 0
-        print(len(output))
         for out_block_ind in range(0, len(output), 2*self.OUTPUT_LENGTH):
             remaining_block_bytes = min(2*self.OUTPUT_LENGTH, len(output)- out_block_ind)
-            print(remaining_block_bytes)
-            print(len(self.block_words))
-            words = ""
             words = compress(self.input_chaining_value, self.block_words, output_block_counter, self.block_length, self.flags | self.ROOT)
 
             for (word, out_word_ind) in zip(words, range(0, remaining_block_bytes, 4)):
-                print(word)
                 remaining_word_bytes = min(remaining_block_bytes - out_word_ind, 4)
-                print(remaining_word_bytes)
                 output[out_block_ind + out_word_ind : out_block_ind + out_word_ind + remaining_word_bytes] = word.to_bytes(4, byteorder="little")[:remaining_word_bytes]
             output_block_counter += 1
 
@@ -47,7 +41,6 @@ class ChunkState:
         self.block_length = 0
         self.blocks_compressed = 0
         self.flags = flags
-        
 
     def len(self):
         return self.BLOCK_SIZE * self.blocks_compressed + self.block_length
@@ -65,10 +58,7 @@ class ChunkState:
                 #We need to pack the little-endian bytes into 32-bit words
                 block_words = self.convert_block_to_words()
                 #Get the chaining_value
-                self.chaining_value = compress(self.chaining_value, block_words, self.chunk_counter, self.BLOCK_SIZE, self.flags | self.start_flag())[0:8]
-                print(self.chaining_value)
-                print(block_words)
-                print(input)
+                self.chaining_value = compress(self.chaining_value, block_words, self.chunk_counter, self.BLOCK_SIZE, self.flags | self.start_flag())[:8]
                 self.blocks_compressed += 1
                 self.block = [0] * self.BLOCK_SIZE
                 self.block_length = 0

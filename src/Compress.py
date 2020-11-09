@@ -40,7 +40,7 @@ def round(state, message):
     return state
 
 def permute(message):
-    result = message
+    result = [0] * 16
     for i in range(0, 16):
         result[i] = message[MSG_PERMUTATION[i]]
     return result

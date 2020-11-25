@@ -28,8 +28,6 @@ def test_hash():
         input_len = out['input_len']
         expected_hash = out['hash']
         hash, expected_hash_bytes = blake_hash(expected_hash, input_len, mode)
-        if hash != expected_hash_bytes:
-            print(out['input_len'])
         assert hash == expected_hash_bytes
 
 

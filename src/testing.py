@@ -3,7 +3,6 @@ import json
 
 from blake3 import Blake3
 
-
 def blake_hash(expected_hash, input_len, mode, key=None, context_string=None):
     if mode == 'hash':
         hasher = Blake3(mode="Simple")

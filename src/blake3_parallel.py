@@ -64,14 +64,9 @@ def compress_parents(child_chaining_values, key, flags):
     parents_exact = []
     for i in range(0, child_len, 2 * OUT_LEN):
         parents_exact.append((child_chaining_values[i:i + OUT_LEN], child_chaining_values[i + OUT_LEN:i + 2 * OUT_LEN]))
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers = THREAD_COUNT) as executor:
-        futures = [executor.submit(parent_cv, left_cv=p1, right_cv = p2, key = key, flags = flags) for (p1, p2) in parents_exact]
-
-    results =  [f.result() for f in futures]
     output = []
-    for r in results:
-        output.extend(r)
+    for (p1, p2) in parents_exact:
+        output.extend(parent_cv(left_cv=p1, right_cv = p2, key = key, flags = flags))
 
     parents_count = len(parents_exact)
     if (parents_count * 2 * OUT_LEN) != child_len:
@@ -79,8 +74,6 @@ def compress_parents(child_chaining_values, key, flags):
         parents_count += 1
 
     return (output, parents_count)
-
-
 
 def left_len (size):
     full_chunks = (size - 1) // CHUNK_LEN
@@ -90,7 +83,7 @@ def left_len (size):
 def count_ones(number): 
     count = 0
     while (number): 
-        number &= (number-1)  
+        number &= (number-1)
         count += 1
     return count
 

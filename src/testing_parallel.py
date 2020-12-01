@@ -1,7 +1,8 @@
 import pytest
 import json
 
-from blake3 import Blake3
+from blake3_parallel import Blake3
+
 
 def blake_hash(expected_hash, input_len, mode, key=None, context_string=None):
     if mode == 'hash':

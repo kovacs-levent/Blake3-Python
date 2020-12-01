@@ -17,7 +17,7 @@ CHUNK_LEN = 1024
 BLOCK_LEN = 64
 
 OUT_LEN = 8
-THREAD_COUNT = 10
+MAX_THREAD_DEPTH = 4
 
 
 def parent_output(left_cv, right_cv, key, flags):
@@ -35,7 +35,7 @@ def compress_subtree_to_parent_node(input, key, chunk_counter, flags):
         cv_array[:num_cvs * OUT_LEN] = cv_slice 
     return cv_array[:2*OUT_LEN]
 
-def compress_subtree_wide(input, key, chunk_counter, flags):
+def compress_subtree_wide(input, key, chunk_counter, flags, current_threads = 1):
     if len(input) <= CHUNK_LEN:
         state = ChunkState(key, chunk_counter, flags)
         state.update(input)
@@ -45,11 +45,14 @@ def compress_subtree_wide(input, key, chunk_counter, flags):
     left = input[:split_ind]
     right = input[split_ind:]
     right_chunk_counter = chunk_counter + (len(left) // CHUNK_LEN)
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers = THREAD_COUNT) as executor:
-        futures = [executor.submit(compress_subtree_wide, input=p1, key = key, chunk_counter = p2, flags = flags) for (p1, p2) in [(left, chunk_counter), (right, right_chunk_counter)]]
-    (left_out, left_num_cv) = futures[0].result()
-    (right_out, right_num_cv) = futures[1].result()
+    if split_ind > 8192 and current_threads < MAX_THREAD_DEPTH:
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 2) as executor:
+            futures = [executor.submit(compress_subtree_wide, input=p1, key = key, chunk_counter = p2, flags = flags, current_threads= current_threads+1) for (p1, p2) in [(left, chunk_counter), (right, right_chunk_counter)]]
+        (left_out, left_num_cv) = futures[0].result()
+        (right_out, right_num_cv) = futures[1].result()
+    else:
+        (left_out, left_num_cv) = compress_subtree_wide(left, key, chunk_counter, flags)
+        (right_out, right_num_cv) = compress_subtree_wide(right, key, right_chunk_counter, flags)
 
     cv_array = left_out + right_out
     if left_num_cv == 1:

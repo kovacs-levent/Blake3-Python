@@ -51,8 +51,8 @@ def compress_subtree_wide(input, key, chunk_counter, flags, current_threads = 1)
         (left_out, left_num_cv) = futures[0].result()
         (right_out, right_num_cv) = futures[1].result()
     else:
-        (left_out, left_num_cv) = compress_subtree_wide(left, key, chunk_counter, flags)
-        (right_out, right_num_cv) = compress_subtree_wide(right, key, right_chunk_counter, flags)
+        (left_out, left_num_cv) = compress_subtree_wide(left, key, chunk_counter, flags, current_threads)
+        (right_out, right_num_cv) = compress_subtree_wide(right, key, right_chunk_counter, flags, current_threads)
 
     cv_array = left_out + right_out
     if left_num_cv == 1:
